@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include "graphics/texturing.hpp"
 
 #include <SDL3/SDL.h>

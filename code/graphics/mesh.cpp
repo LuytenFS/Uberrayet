@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include "mesh.hpp"
 #include "texturing.hpp"
 

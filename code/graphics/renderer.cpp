@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include "renderer.hpp"
 #include "glad/gl.h"
 

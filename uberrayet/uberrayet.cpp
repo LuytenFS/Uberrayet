@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include "code/engine/engine.hpp"
 
 int main(int /*argc*/, char ** /*argv*/) {

@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include "engine.hpp"
 #include "graphics/renderer.hpp"
 #include "utilities/externals.hpp"

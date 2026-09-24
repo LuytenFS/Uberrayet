@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #pragma once
 
 #include "code/graphics/mesh.hpp"

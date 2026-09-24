@@ -1,7 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
 #include <glad/gl.h>
 #include <vector>
 #include <string>

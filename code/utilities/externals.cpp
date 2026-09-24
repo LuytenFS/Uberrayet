@@ -1,8 +1,3 @@
-/*
- *   Copyright (C) - Adara, all rights reserved.
- */
-
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
