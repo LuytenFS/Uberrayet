@@ -2,6 +2,8 @@
 
 #include "code/graphics/mesh.hpp"
 #include "code/graphics/renderer.hpp"
+#include "code/input/keyboard.hpp"
+#include "code/input/mouse.hpp"
 #include <SDL3/SDL.h>
 
 class Engine {
@@ -40,4 +42,6 @@ private:
   SDL_GLContext m_glContext = nullptr;
   Renderer m_renderer;
   Mesh m_triangleMesh;
+  Keyboard m_keyboard;
+  Mouse m_mouse;
 };

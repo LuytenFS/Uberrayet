@@ -30,7 +30,9 @@ void Engine::Initialize() {
     SDL_Quit();
     return;
   }
-
+  
+  SDL_SetWindowRelativeMouseMode(m_window, true);
+  
   m_glContext = SDL_GL_CreateContext(m_window);
   if (!m_glContext) {
     std::fprintf(stderr, "SDL_GL_CreateContext failed: %s\n", SDL_GetError());
@@ -145,7 +147,12 @@ void Engine::ProcessInput() {
       m_screenHeight = event.window.data2;
       glViewport(0, 0, m_screenWidth, m_screenHeight);
     }
+
+    m_mouse.Handle_Event(event); // feed motion events to Mouse
   }
+
+  m_keyboard.Update(); // refresh scancode snapshot + previous-frame diff
+  m_mouse.End_Frame(); // refresh button state, reset per-frame delta accumulator
 }
 
 void Engine::Update(float deltaTime) {
