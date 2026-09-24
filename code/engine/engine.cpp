@@ -1,7 +1,8 @@
 #include "engine.hpp"
 #include "graphics/renderer.hpp"
-#include "utilities/externals.hpp"
 #include "graphics/texturing.hpp"
+#include "utilities/externals.hpp"
+#include "utilities/logging.hpp"
 
 #include <SDL3/SDL.h>
 #include <cstdio>
@@ -10,7 +11,9 @@
 
 void Engine::Initialize() {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
-    std::fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
+    m_logger.Error(
+        "Engine Initialization Failed",
+        (std::string("SDL_Init failed: ") + SDL_GetError()).c_str());
     return;
   }
 
@@ -22,11 +25,12 @@ void Engine::Initialize() {
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
   SDL_WindowFlags windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-  m_window =
-      SDL_CreateWindow("Uberrayet", m_screenWidth, m_screenHeight, windowFlags);
+  m_window = SDL_CreateWindow("Uberrayet", m_screenWidth, m_screenHeight, windowFlags);
 
   if (!m_window) {
-    std::fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
+    m_logger.Error(
+        "Engine Initialization Failed",
+        (std::string("SDL_CreateWindow failed: ") + SDL_GetError()).c_str());
     SDL_Quit();
     return;
   }
@@ -35,7 +39,9 @@ void Engine::Initialize() {
   
   m_glContext = SDL_GL_CreateContext(m_window);
   if (!m_glContext) {
-    std::fprintf(stderr, "SDL_GL_CreateContext failed: %s\n", SDL_GetError());
+    m_logger.Error("Engine Initialization Failed",
+                 (std::string("SDL_GL_CreateContext failed: ") + SDL_GetError())
+                     .c_str());
     SDL_DestroyWindow(m_window);
     m_window = nullptr;
     SDL_Quit();
@@ -43,7 +49,8 @@ void Engine::Initialize() {
   }
 
   if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-    std::fprintf(stderr, "glad failed to load GL functions\n");
+    m_logger.Error("Engine Initialization Failed",
+                 "glad failed to load GL functions.");
     SDL_GL_DestroyContext(m_glContext);
     SDL_DestroyWindow(m_window);
     m_glContext = nullptr;

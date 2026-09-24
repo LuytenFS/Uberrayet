@@ -4,6 +4,7 @@
 #include "code/graphics/renderer.hpp"
 #include "code/input/keyboard.hpp"
 #include "code/input/mouse.hpp"
+#include "utilities/logging.hpp"
 #include <SDL3/SDL.h>
 
 class Engine {
@@ -44,4 +45,5 @@ private:
   Mesh m_triangleMesh;
   Keyboard m_keyboard;
   Mouse m_mouse;
+  Logger m_logger;
 };

@@ -1,8 +1,8 @@
 #include "renderer.hpp"
-#include "glad/gl.h"
+#include "utilities/logging.hpp"
 
+#include <glad/gl.h>
 #include <string>
-#include <iostream>
 
 void Renderer::Initialize()
 {
@@ -14,8 +14,9 @@ void Renderer::Initialize()
 bool Renderer::CreateShaderProgram(const std::string &vertexSource,
                                    const std::string &fragmentSource) {
   if (vertexSource.empty() || fragmentSource.empty()) {
-    std::cerr
-        << "Cannot create shader program: empty source string provided.\n";
+    m_logger.Error(
+        "Renderer",
+        "Cannot create shader program: empty source string provided.");
     return false;
   }
 
@@ -32,7 +33,9 @@ bool Renderer::CreateShaderProgram(const std::string &vertexSource,
   if (!success) {
     char infoLog[512];
     glGetShaderInfoLog(vertShader, 512, nullptr, infoLog);
-    std::cerr << "Vertex Shader Compilation Error:\n" << infoLog << '\n';
+    m_logger.Error(
+        "Renderer",
+        (std::string("Vertex Shader Compilation Error: ") + infoLog).c_str());
     return false;
   }
 
@@ -45,7 +48,9 @@ bool Renderer::CreateShaderProgram(const std::string &vertexSource,
   if (!success) {
     char infoLog[512];
     glGetShaderInfoLog(fragShader, 512, nullptr, infoLog);
-    std::cerr << "Fragment Shader Compilation Error:\n" << infoLog << '\n';
+    m_logger.Error(
+        "Renderer",
+        (std::string("Fragment Shader Compilation Error: ") + infoLog).c_str());
     glDeleteShader(vertShader);
     return false;
   }
@@ -60,7 +65,9 @@ bool Renderer::CreateShaderProgram(const std::string &vertexSource,
   if (!success) {
     char infoLog[512];
     glGetProgramInfoLog(m_shaderProgram, 512, nullptr, infoLog);
-    std::cerr << "Shader Program Linking Error:\n" << infoLog << '\n';
+    m_logger.Error(
+        "Renderer",
+        (std::string("Shader Program Linking Error: ") + infoLog).c_str());
   }
 
   // Clean up shader objects post-linking

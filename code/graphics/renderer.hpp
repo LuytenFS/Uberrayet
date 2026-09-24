@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utilities/logging.hpp"
 #include <glad/gl.h>
 #include <string>
 
@@ -19,4 +20,5 @@ public:
 
 private:
     GLuint m_shaderProgram = 0;
+    Logger m_logger;
 };
