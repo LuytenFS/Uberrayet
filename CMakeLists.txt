@@ -44,6 +44,26 @@ FetchContent_MakeAvailable(glad)
 
 glad_add_library(glad_gl_core_46 REPRODUCIBLE API gl:core=4.6)
 
+# Vulkan SDK
+find_package(Vulkan REQUIRED)
+
+# vk-bootstrap
+FetchContent_Declare(
+    vk-bootstrap
+    GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap.git
+    GIT_TAG        v1.3.302
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(vk-bootstrap)
+
+FetchContent_Declare(
+    vma
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG        v3.1.0
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(vma)
+
 find_package(OpenGL REQUIRED)
 
 # ---------------------------------------------------------------------------
@@ -68,6 +88,9 @@ target_link_libraries(Uberrayet PRIVATE
     SDL3_image::SDL3_image
     glad_gl_core_46
     OpenGL::GL
+    Vulkan::Vulkan
+    vk-bootstrap::vk-bootstrap
+    GPUOpen::VulkanMemoryAllocator
 )
 
 target_include_directories(Uberrayet PRIVATE

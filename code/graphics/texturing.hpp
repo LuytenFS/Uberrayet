@@ -1,16 +1,16 @@
 #pragma once
 
-#include <glad/gl.h>
 #include <string>
+#include <vector>
 
-GLuint CreateMissingTexture();
+struct DecodedImage {
+  std::vector<unsigned char> pixels; // RGBA8, top-to-bottom
+  int width = 0;
+  int height = 0;
+  bool valid = false;
+};
 
-/* class that loads textures, pretty useful */
-class TexLoader{
+class TexLoader {
 public:
-    static GLuint LoadTextureFromFile(const std::string& path);
-
-    static GLuint GetFallbackTexture();
-private:
-    static GLuint CreateMissingTexture();
+  static DecodedImage LoadImageFromFile(const std::string &path);
 };
