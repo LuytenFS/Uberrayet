@@ -4,11 +4,11 @@
 #include <glad/gl.h>
 #include <string>
 
-void OpenGLRenderer::Initialize()
-{
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+bool OpenGLRenderer::Initialize() {
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  return true;
 }
 
 bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexSource,

@@ -20,7 +20,7 @@ class IRenderer {
 public:
   virtual ~IRenderer() = default;
 
-  virtual void Initialize() = 0;
+  virtual bool Initialize() = 0;
   virtual bool CreateShaderProgram(const std::string &vertexSource,
                                    const std::string &fragmentSource) = 0;
 

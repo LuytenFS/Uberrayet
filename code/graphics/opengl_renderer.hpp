@@ -9,7 +9,7 @@
 
 class OpenGLRenderer : public IRenderer {
 public:
-  void Initialize() override;
+  bool Initialize() override;
   bool CreateShaderProgram(const std::string &vertexSource,
                            const std::string &fragmentSource) override;
   void BeginFrame() override;

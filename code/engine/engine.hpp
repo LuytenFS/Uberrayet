@@ -21,7 +21,7 @@ public:
         m_backend(backend), m_vulkanValidation(vulkanValidation) {}
 
   void Initialize();
-  void LoadContent();
+  bool LoadContent();
   void Run();
 
   void ProcessInput();

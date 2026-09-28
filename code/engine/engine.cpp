@@ -1,8 +1,6 @@
 #include "engine.hpp"
 #include "graphics/opengl_renderer.hpp"
-#include "graphics/texturing.hpp"
 #include "graphics/vulkan_renderer.hpp"
-#include "utilities/externals.hpp"
 #include "utilities/logging.hpp"
 
 #include <SDL3/SDL.h>
@@ -88,44 +86,41 @@ void Engine::Initialize() {
     SDL_Quit();
     return;
   }
-
+  if (!m_renderer->Initialize()) {
+    m_logger.Error("Engine Initialization Failed",
+                   "Renderer::Initialize() failed.");
+    Cleanup();
+    return; // m_isRunning stays false, Run() will bail before LoadContent
+  }
   m_renderer->OnResize(m_screenWidth, m_screenHeight);
-  m_renderer->Initialize();
   m_isRunning = true;
 }
 
-void Engine::LoadContent() {
-  std::string vertexCode = LoadShaderSource("assets/shaders/basic.vert");
-  std::string fragmentCode = LoadShaderSource("assets/shaders/basic.frag");
-
-  if (!m_renderer->CreateShaderProgram(vertexCode, fragmentCode)) {
-    std::cerr << "Failed to build shader program in LoadContent!\n";
+bool Engine::LoadContent() {
+  if (!m_renderer->CreateShaderProgram("assets/shaders/basic.vert",
+                                       "assets/shaders/basic.frag")) {
+    std::cerr << "Failed to build shader program\n";
+    return false;
   }
 
-  std::vector<Vertex> squareVertices = {
-      //  x,      y,     z,    red,  green, blue, alpha,  u,    v
-      {-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f}, // 0: Top-Left
-      {0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},  // 1: Top-Right
-      {0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-       0.0f}, // 2: Bottom-Right
-      {-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f} // 3: Bottom-Left
-  };
+  const std::vector<Vertex> vertices = {
+      {-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+      {0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f},
+      {-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}};
 
-  std::vector<unsigned int> squareIndices = {
-      0, 1, 2, // First Triangle
-      0, 2, 3  // Second Triangle
-  };
+  const std::vector<unsigned int> indices = {0, 1, 2, 0, 2, 3};
 
-  DecodedImage img =
-      TexLoader::LoadImageFromFile("assets/textures/container.png");
-  if (img.valid) {
-    m_containerTextureHandle =
-        m_renderer->UploadTexture(img.pixels.data(), img.width, img.height);
-  } else {
-    std::cerr << "Failed to load container.png\n";
+  m_triangleMeshHandle = m_renderer->UploadMesh(vertices, indices);
+
+  if (m_triangleMeshHandle == kInvalidMesh) {
+    std::cerr << "Failed to upload mesh\n";
+    return false;
   }
 
-  m_triangleMeshHandle = m_renderer->UploadMesh(squareVertices, squareIndices);
+  m_containerTextureHandle = kInvalidTexture;
+
+  return true;
 }
 
 void Engine::Run() {
@@ -133,7 +128,10 @@ void Engine::Run() {
   if (!m_isRunning)
     return;
 
-  LoadContent();
+  if (!LoadContent()) {
+    Cleanup();
+    return;
+  }
 
   Uint64 lastTime = SDL_GetTicksNS();
   constexpr float fixedStep = 1.0f / 60.0f;
@@ -161,19 +159,33 @@ void Engine::Run() {
 }
 
 void Engine::ProcessInput() {
-  SDL_Event event;
+  SDL_Event event{};
+
   while (SDL_PollEvent(&event)) {
-    if (event.type == SDL_EVENT_QUIT)
+    if (event.type == SDL_EVENT_QUIT) {
       Quit();
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
-      Quit();
-    if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-      m_screenWidth = event.window.data1;
-      m_screenHeight = event.window.data2;
-      m_renderer->OnResize(m_screenWidth, m_screenHeight);
     }
+
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
+      Quit();
+    }
+
+    if (event.type == SDL_EVENT_WINDOW_RESIZED ||
+        event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
+      int pixelWidth = 0;
+      int pixelHeight = 0;
+
+      SDL_GetWindowSizeInPixels(m_window, &pixelWidth, &pixelHeight);
+
+      m_screenWidth = pixelWidth;
+      m_screenHeight = pixelHeight;
+
+      m_renderer->OnResize(pixelWidth, pixelHeight);
+    }
+
     m_mouse.Handle_Event(event);
   }
+
   m_keyboard.Update();
   m_mouse.End_Frame();
 }
