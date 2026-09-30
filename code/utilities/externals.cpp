@@ -3,14 +3,16 @@
 #include <sstream>
 #include <string>
 
-std::string LoadShaderSource(const char *filePath) {
-  std::ifstream file(filePath);
+std::string LoadShaderSource(const std::string &filePath) {
+  std::ifstream file(filePath, std::ios::binary);
+
   if (!file.is_open()) {
     std::cerr << "Failed to open shader file: " << filePath << '\n';
-    return "";
+    return {};
   }
 
-  std::stringstream buffer;
+  std::ostringstream buffer;
   buffer << file.rdbuf();
+
   return buffer.str();
 }

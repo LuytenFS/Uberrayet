@@ -1,13 +1,16 @@
-#version 460 core
+#version 460
 
-in vec4 vertexColor;
-in vec2 TexCoord;
+layout(location = 0) in vec4 vertexColor;
+layout(location = 1) in vec2 texCoord;
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
-uniform sampler2D texture_diffuse1;
+#ifdef VULKAN
+layout(set = 0, binding = 0) uniform sampler2D uTexture;
+#else
+uniform sampler2D uTexture;
+#endif
 
 void main() {
-    // Fragment shader only calculates pixel output colors
-    FragColor = texture(texture_diffuse1, TexCoord) * vertexColor;
+    FragColor = texture(uTexture, texCoord) * vertexColor;
 }

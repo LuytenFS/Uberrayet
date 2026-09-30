@@ -2,4 +2,4 @@
 
 #include <string>
 
-std::string LoadShaderSource(const char *filePath);
+std::string LoadShaderSource(const std::string &filePath);
