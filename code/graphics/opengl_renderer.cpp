@@ -1,5 +1,6 @@
 #include "opengl_renderer.hpp"
 #include "utilities/logging.hpp"
+#include "utilities/externals.hpp"
 
 #include <glad/gl.h>
 #include <string>
@@ -11,12 +12,15 @@ bool OpenGLRenderer::Initialize() {
   return true;
 }
 
-bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexSource,
-                                   const std::string &fragmentSource) {
+bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexPath,
+                                         const std::string &fragmentPath) {
+  const std::string vertexSource = LoadShaderSource(vertexPath);
+  const std::string fragmentSource = LoadShaderSource(fragmentPath);
+
   if (vertexSource.empty() || fragmentSource.empty()) {
     m_logger.Error(
         "OpenGLRenderer",
-        "Cannot create shader program: empty source string provided.");
+        "Cannot create shader program: failed to load shader source file(s).");
     return false;
   }
 
@@ -36,6 +40,7 @@ bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexSource,
     m_logger.Error(
         "OpenGLRenderer",
         (std::string("Vertex Shader Compilation Error: ") + infoLog).c_str());
+    glDeleteShader(vertShader);
     return false;
   }
 
@@ -52,6 +57,7 @@ bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexSource,
         "OpenGLRenderer",
         (std::string("Fragment Shader Compilation Error: ") + infoLog).c_str());
     glDeleteShader(vertShader);
+    glDeleteShader(fragShader);
     return false;
   }
 
@@ -95,9 +101,8 @@ void OpenGLRenderer::EndFrame()
 
 }
 
-void OpenGLRenderer::OnResize(int width, int height)
-{
-
+void OpenGLRenderer::OnResize(int width, int height) {
+  glViewport(0, 0, width, height);
 }
 
 void OpenGLRenderer::Shutdown() {
@@ -192,9 +197,18 @@ void OpenGLRenderer::DrawMesh(MeshHandle mesh, TextureHandle texture) {
     if (m_fallbackTexture == 0) {
       unsigned char pixels[] = {255, 0, 255, 255, 0,   0, 0,   255,
                                 0,   0, 0,   255, 255, 0, 255, 255};
-      m_fallbackTexture = UploadTexture(pixels, 2, 2);
+
+      glGenTextures(1, &m_fallbackTexture);
+      glBindTexture(GL_TEXTURE_2D, m_fallbackTexture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, pixels);
+      glBindTexture(GL_TEXTURE_2D, 0);
     }
-    glBindTexture(GL_TEXTURE_2D, m_textures[m_fallbackTexture]);
+    glBindTexture(GL_TEXTURE_2D, m_fallbackTexture);
   }
 
   glBindVertexArray(meshIt->second.vao);

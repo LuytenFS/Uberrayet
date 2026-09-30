@@ -1,5 +1,6 @@
 #include "engine.hpp"
 #include "graphics/opengl_renderer.hpp"
+#include "graphics/texturing.hpp"
 #include "graphics/vulkan_renderer.hpp"
 #include "utilities/logging.hpp"
 
@@ -118,11 +119,22 @@ bool Engine::LoadContent() {
     return false;
   }
 
-  m_containerTextureHandle = kInvalidTexture;
+  DecodedImage img =
+      TexLoader::LoadImageFromFile("assets/textures/container.png");
+  if (img.valid) {
+    m_containerTextureHandle =
+        m_renderer->UploadTexture(img.pixels.data(), img.width, img.height);
+    if (m_containerTextureHandle == kInvalidTexture) {
+      std::cerr
+          << "Failed to upload texture (renderer returned invalid handle)\n";
+    }
+  } else {
+    std::cerr << "Failed to load container.png\n";
+    m_containerTextureHandle = kInvalidTexture;
+  }
 
   return true;
 }
-
 void Engine::Run() {
   Initialize();
   if (!m_isRunning)
