@@ -3,11 +3,13 @@
 #include "graphics/texturing.hpp"
 #include "graphics/vulkan_renderer.hpp"
 #include "utilities/logging.hpp"
+#include "math/umath.hpp"
 
 #include <SDL3/SDL.h>
 #include <cstdio>
 #include <glad/gl.h>
 #include <iostream>
+#include <algorithm>
 
 bool Engine::InitializeOpenGL() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -94,6 +96,8 @@ void Engine::Initialize() {
     return; // m_isRunning stays false, Run() will bail before LoadContent
   }
   m_renderer->OnResize(m_screenWidth, m_screenHeight);
+  m_camera.SetAspect(static_cast<float>(m_screenWidth) /
+                     static_cast<float>(std::max(m_screenHeight, 1)));
   m_isRunning = true;
 }
 
@@ -164,6 +168,7 @@ void Engine::Run() {
     }
     Update(m_deltaTime);
     Draw();
+    m_mouse.End_Frame();
   }
 
   UnloadContent();
@@ -191,6 +196,8 @@ void Engine::ProcessInput() {
 
       m_screenWidth = pixelWidth;
       m_screenHeight = pixelHeight;
+      m_camera.SetAspect(static_cast<float>(pixelWidth) /
+                         static_cast<float>(std::max(pixelHeight, 1)));
 
       m_renderer->OnResize(pixelWidth, pixelHeight);
     }
@@ -199,18 +206,69 @@ void Engine::ProcessInput() {
   }
 
   m_keyboard.Update();
-  m_mouse.End_Frame();
 }
 
-void Engine::Update(float deltaTime) {}
-void Engine::FixedUpdate(float fixedDeltaTime) {}
+void Engine::Update(float dt) {
+  constexpr float sens = 0.0025f;    // radians per pixel
+  constexpr float rollSpeed = 1.5f;  // rad/s
+  constexpr double moveSpeed = 10.0; // units/s
+
+  // 6DOF: deltas are applied in the camera's LOCAL frame
+  quat yaw = quat_from_axis_angle(0, 1, 0, -m_mouse.delta_x() * sens);
+  quat pitch = quat_from_axis_angle(1, 0, 0, -m_mouse.delta_y() * sens);
+  m_camera.Rotate(yaw);
+  m_camera.Rotate(pitch);
+
+  float roll = 0.0f;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_Q))
+    roll += rollSpeed * dt;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_E))
+    roll -= rollSpeed * dt;
+  if (roll != 0.0f)
+    m_camera.Rotate(quat_from_axis_angle(0, 0, 1, roll));
+
+  double r = 0, u = 0, f = 0;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_W))
+    f += 1;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_S))
+    f -= 1;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_D))
+    r += 1;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_A))
+    r -= 1;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_SPACE))
+    u += 1;
+  if (m_keyboard.Is_Down(SDL_SCANCODE_LSHIFT))
+    u -= 1;
+  m_camera.MoveLocal(r * moveSpeed * dt, u * moveSpeed * dt,
+                     f * moveSpeed * dt);
+}
+
+void Engine::FixedUpdate(float fixedDeltaTime) {
+
+}
 
 void Engine::Draw() {
+  const bool vk = (m_backend == uberrayet::RendererBackend::Vulkan);
+
+  const mat4 view = m_camera.GetViewMatrix();
+  const mat4 proj = vk ? m_camera.GetProjectionMatrixVulkan()
+                       : m_camera.GetProjectionMatrixOpenGL();
+
+  double cx, cy, cz;
+  m_camera.GetPosition(cx, cy, cz);
+
+  // Camera-relative: subtract in double precision, THEN cast to float
+  const mat4 model = mat4_translation(static_cast<float>(m_quadX - cx),
+                                      static_cast<float>(m_quadY - cy),
+                                      static_cast<float>(m_quadZ - cz));
+  const mat4 mvp = mat4_multiply(proj, mat4_multiply(view, model));
+
   m_renderer->BeginFrame();
   m_renderer->Clear(0.02f, 0.02f, 0.06f, 1.0f);
   m_renderer->UseShaderProgram();
 
-  m_renderer->DrawMesh(m_triangleMeshHandle, m_containerTextureHandle);
+  m_renderer->DrawMesh(m_triangleMeshHandle, m_containerTextureHandle, mvp);
 
   m_renderer->EndFrame();
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "camera.hpp"
 #include "code/graphics/irenderer.hpp"
 #include "code/input/keyboard.hpp"
 #include "code/input/mouse.hpp"
@@ -57,6 +58,9 @@ private:
 
   MeshHandle m_triangleMeshHandle = kInvalidMesh;
   TextureHandle m_containerTextureHandle = kInvalidTexture;
+
+  Camera m_camera{60.0f, 1280.0f / 720.0f, 0.1f, 1.0e7f};
+  double m_quadX = 0.0, m_quadY = 0.0, m_quadZ = -5.0;
 
   Keyboard m_keyboard;
   Mouse m_mouse;

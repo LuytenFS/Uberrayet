@@ -80,6 +80,7 @@ bool OpenGLRenderer::CreateShaderProgram(const std::string &vertexPath,
   glDeleteShader(vertShader);
   glDeleteShader(fragShader);
 
+  m_mvpLoc = glGetUniformLocation(m_shaderProgram, "u_mvp");
   return success != 0;
 }
 
@@ -184,10 +185,13 @@ void OpenGLRenderer::DestroyTexture(TextureHandle handle) {
   m_textures.erase(it);
 }
 
-void OpenGLRenderer::DrawMesh(MeshHandle mesh, TextureHandle texture) {
+void OpenGLRenderer::DrawMesh(MeshHandle mesh, TextureHandle texture,
+                              const mat4 &mvp) {
   auto meshIt = m_meshes.find(mesh);
   if (meshIt == m_meshes.end())
     return;
+
+  glUniformMatrix4fv(m_mvpLoc, 1, GL_FALSE, &mvp.data[0]);
 
   glActiveTexture(GL_TEXTURE0);
   auto texIt = m_textures.find(texture);

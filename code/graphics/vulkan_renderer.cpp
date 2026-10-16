@@ -456,7 +456,7 @@ VulkanRenderer::UploadMesh(const std::vector<Vertex> &vertices,
 }
 
 void VulkanRenderer::DrawMesh(MeshHandle meshHandle,
-                              TextureHandle textureHandle) {
+                              TextureHandle textureHandle, const mat4 &mvp) {
   if (!m_renderingActive || meshHandle == kInvalidMesh)
     return;
 
@@ -484,9 +484,15 @@ void VulkanRenderer::DrawMesh(MeshHandle meshHandle,
   }
 
   const VkDeviceSize offset = 0;
+
   vkCmdBindVertexBuffers(m_commandBuffer, 0, 1, &mesh.vertexBuffer, &offset);
+
   vkCmdBindIndexBuffer(m_commandBuffer, mesh.indexBuffer, 0,
                        VK_INDEX_TYPE_UINT32);
+
+  vkCmdPushConstants(m_commandBuffer, m_pipelineLayout,
+                     VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat4), &mvp);
+
   vkCmdDrawIndexed(m_commandBuffer, mesh.indexCount, 1, 0, 0, 0);
 }
 
@@ -742,10 +748,17 @@ bool VulkanRenderer::CreatePipelineLayout() {
   if (m_pipelineLayout != VK_NULL_HANDLE)
     return true;
 
+  VkPushConstantRange pushRange{};
+  pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  pushRange.offset = 0;
+  pushRange.size = sizeof(mat4);
+
   VkPipelineLayoutCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   createInfo.setLayoutCount = 1;
   createInfo.pSetLayouts = &m_descriptorSetLayout;
+  createInfo.pushConstantRangeCount = 1;
+  createInfo.pPushConstantRanges = &pushRange;
 
   const VkResult result = vkCreatePipelineLayout(
       m_vkbDevice.device, &createInfo, nullptr, &m_pipelineLayout);

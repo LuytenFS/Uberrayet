@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "math/types.hpp"
+
 struct Vertex {
   float x, y, z;
   float red, green, blue, alpha;
@@ -43,5 +45,6 @@ public:
 
   // Draw a previously-uploaded mesh, optionally bound to a texture (0 =
   // fallback)
-  virtual void DrawMesh(MeshHandle mesh, TextureHandle texture) = 0;
+  virtual void DrawMesh(MeshHandle mesh, TextureHandle texture,
+                        const mat4 &mvp) = 0;
 };

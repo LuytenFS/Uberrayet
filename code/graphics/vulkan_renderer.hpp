@@ -61,7 +61,8 @@ public:
 
   void DestroyTexture(TextureHandle handle) override;
 
-  void DrawMesh(MeshHandle mesh, TextureHandle texture) override;
+  void DrawMesh(MeshHandle mesh, TextureHandle texture,
+                const mat4 &mvp) override;
 
 private:
   bool InitInstance();

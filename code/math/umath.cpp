@@ -58,6 +58,28 @@ mat4 quat_to_mat4(quat q) {
   return r;
 }
 
+mat4 mat4_multiply(const mat4 &a, const mat4 &b) {
+  mat4 r{};
+  for (int col = 0; col < 4; ++col) {
+    for (int row = 0; row < 4; ++row) {
+      float sum = 0.0f;
+      for (int k = 0; k < 4; ++k) {
+        sum += a.m[k][row] * b.m[col][k];
+      }
+      r.m[col][row] = sum;
+    }
+  }
+  return r; // r = a * b
+}
+
+mat4 mat4_translation(float x, float y, float z) {
+  mat4 r = mat4_identity();
+  r.m[3][0] = x;
+  r.m[3][1] = y;
+  r.m[3][2] = z;
+  return r;
+}
+
 // OpenGL Perspective Matrix (Z range: [-1, 1], Y-axis: Up)
 mat4 mat4_perspective_opengl(float fov_y, float aspect, float z_near,
                              float z_far) {
@@ -80,11 +102,34 @@ mat4 mat4_perspective_vulkan(float fov_y, float aspect, float z_near,
   float tan_half_fov = tanf(fov_y * 0.5f);
 
   result.m[0][0] = 1.0f / (aspect * tan_half_fov);
-  result.m[1][1] =
-      -1.0f / tan_half_fov; // Inverted Y for Vulkan coordinate system
+  result.m[1][1] = 1.0f / tan_half_fov;
   result.m[2][2] = z_far / (z_near - z_far);
   result.m[2][3] = -1.0f;
   result.m[3][2] = (z_near * z_far) / (z_near - z_far);
 
   return result;
+}
+
+quat quat_normalize(quat q) {
+  const float len_sq = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+  if (len_sq < 1e-12f) {
+    return quat_identity(); // degenerate, avoid divide by zero
+  }
+
+  const float inv = 1.0f / std::sqrt(len_sq);
+  return quat{q.x * inv, q.y * inv, q.z * inv, q.w * inv};
+}
+
+void quat_rotate_vec3(quat q, const float in[3], float out[3]) {
+  // v' = v + w*t + cross(u, t), where u = (q.x, q.y, q.z), t = 2*cross(u, v)
+  const float ux = q.x, uy = q.y, uz = q.z;
+  const float vx = in[0], vy = in[1], vz = in[2];
+
+  const float tx = 2.0f * (uy * vz - uz * vy);
+  const float ty = 2.0f * (uz * vx - ux * vz);
+  const float tz = 2.0f * (ux * vy - uy * vx);
+
+  out[0] = vx + q.w * tx + (uy * tz - uz * ty);
+  out[1] = vy + q.w * ty + (uz * tx - ux * tz);
+  out[2] = vz + q.w * tz + (ux * ty - uy * tx);
 }

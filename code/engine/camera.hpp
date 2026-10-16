@@ -15,7 +15,8 @@ public:
   }
 
   void Rotate(quat delta_rotation);
-
+  void MoveLocal(double right, double up, double forward);
+  void SetAspect(float aspect);
   // Matrix Operations
   mat4 GetViewMatrix() const;
 

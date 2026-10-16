@@ -27,7 +27,8 @@ public:
   TextureHandle UploadTexture(const unsigned char *pixels, int width,
                               int height) override;
   void DestroyTexture(TextureHandle handle) override;
-  void DrawMesh(MeshHandle mesh, TextureHandle texture) override;
+  void DrawMesh(MeshHandle mesh, TextureHandle texture,
+                const mat4 &mvp) override;
 
 private:
   GLuint m_shaderProgram = 0;
@@ -41,4 +42,5 @@ private:
   MeshHandle m_nextMeshHandle = 1;
   TextureHandle m_nextTextureHandle = 1;
   GLuint m_fallbackTexture = 0;
+  GLint m_mvpLoc = -1;
 };
